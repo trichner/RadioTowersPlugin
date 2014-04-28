@@ -29,10 +29,10 @@ public class RadioTowerManager implements Listener, Runnable {
     public void registerTower(Location location){
         if(towers.containsKey(location)) return;
 
-        RadioTower tower = new RadioTower(plugin,location);
-        // is tower valid?
-        towers.put(location, tower);
-        plugin.getLogger().fine("new tower registered");
+        if(RadioTower.validate(location)){
+            towers.put(location, new RadioTower(location));
+            plugin.getLogger().fine("new tower registered");
+        }
     }
 
     public Set<Location> getTowerLocations(){

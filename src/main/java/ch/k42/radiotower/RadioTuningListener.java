@@ -1,5 +1,10 @@
 package ch.k42.radiotower;
 
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -9,9 +14,7 @@ import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerItemHeldEvent;
 import org.bukkit.inventory.ItemStack;
 
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import com.google.common.collect.ImmutableSet;
 
 //import sun.net.www.content.text.plain;
 
@@ -50,9 +53,11 @@ public class RadioTuningListener implements Listener{
         }
     }
 
+    private static final Set<Action> RIGHT_CLICK_ACTIONS = ImmutableSet.of(Action.RIGHT_CLICK_AIR,Action.RIGHT_CLICK_BLOCK);
+
     @EventHandler
     public void rightClick(PlayerInteractEvent event){
-        if(!(event.getAction().equals(Action.RIGHT_CLICK_AIR) || event.getAction().equals(Action.RIGHT_CLICK_BLOCK))) return; // only rightclick
+        if(!(RIGHT_CLICK_ACTIONS.contains(event.getAction()))) return; // only rightclick
 
         if(Minions.isNamedRadio(event.getItem(),LOREITEMRADIO)){ // yes, clicked in the air with radio
             plugin.getLogger().finest("Radio interact event");

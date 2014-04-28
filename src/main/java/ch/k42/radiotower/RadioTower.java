@@ -1,11 +1,15 @@
 package ch.k42.radiotower;
 
+import java.util.Set;
+
 import org.bukkit.Bukkit;
 import org.bukkit.Effect;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
-import org.bukkit.plugin.Plugin;
+import org.bukkit.block.Sign;
+
+import com.google.common.collect.ImmutableSet;
 
 /**
  * Created with IntelliJ IDEA.
@@ -23,17 +27,13 @@ public class RadioTower{
     private static final int D_FREQ = 10; // 10 MHz Bands
     private static final int MIN_FREQ = 1000; // 1 MHz
 
-    private static final int ALPHA = 100; // 1 MHz
-
+    private static final int ALPHA = 100; // Magic Value
 
     private static int MIN_HEIGHT = 6;
     private static int MAX_HEIGHT = 50;
     private static int MAX_RANGE = 10000;
 
-    public final int WORLD_HEIGHT;
-
-    protected String message;
-    protected Plugin plugin;
+    private String message;
     private final Location location;
 
     private int maxRange = 0;
@@ -54,20 +54,16 @@ public class RadioTower{
     }
 
 
-    public RadioTower(Plugin plugin, Location location) {
+    public RadioTower(Location location) {
         this.location = location;
-        this.WORLD_HEIGHT = location.getWorld().getMaxHeight();
-        this.plugin = plugin;
         this.maxRange = 0;
-
         updateFrequency();
-
         if(update()){
             location.getWorld().playEffect(location, Effect.MOBSPAWNER_FLAMES,0);
         }
     }
 
-    private static final int M32 = 0xFFFFFFE0;
+    private static final int M32 = 0xFFFFFFE0; // Masks away the lowest bits, equivalent to /32
     private void updateFrequency(){
         int hash = ((location.getBlockX() & M32)*31 + (location.getBlockY() & M32))* 53 + (location.getBlockZ() & M32);
         hash = Minions.cryptoHashToInt(hash);
@@ -97,36 +93,63 @@ public class RadioTower{
         this.maxRange = range;
     }
 
-
-    private double invPowerLaw(double r){
+    /**
+     * Calculates the power at a radius r from the antenna.
+     * This is based on the fact that an antenna farfield decreases
+     * with ~1/r, alpha is a magic value
+     * @param r radius from antenna
+     * @return power at a distance of r
+     */
+    private double antennaField(double r){
         if(r>this.maxRange) return 0;
         if(r<1) r=1;
         return ALPHA/(r);
-        //return this.alphaSQ*(r-this.maxRange)*(r-this.maxRange); // p(r)=a*(r-R)^2
     }
 
 
+    /**
+     * Returns the received power in a physical unit (Watt)
+     * @param location location of the listener
+     * @return reception power in Watt
+     */
     public double getReceptionPower(Location location) {
-        if(!this.location.getWorld().equals(location.getWorld())) return 0;
-        if(this.location.getBlock().getBlockPower()!=0) return 0; // tower off?
-
-        double distance =this.location.distance(location);
-        if(distance>MAX_RANGE) return 0;
-        return this.antennaGain* invPowerLaw(distance);
+        return this.antennaGain* getNormReceptionPower(location);
     }
 
+    /**
+     * Returns the received power normed between [0,1]
+     * @param location location of receiver
+     * @return value in [0,1], depending on distance
+     */
     public double getNormReceptionPower(Location location) {
         if(!this.location.getWorld().equals(location.getWorld())) return 0;
         if(this.location.getBlock().getBlockPower()!=0) return 0; // tower off?
 
         double distance =this.location.distance(location);
         if(distance>MAX_RANGE) return 0;
-        return invPowerLaw(distance);
+        return antennaField(distance);
     }
 
     public boolean update() {
-        if(!this.location.getBlock().getType().equals(BASE_BLOCK)) // check if base is correct
-            return false;
+        int height = verify(location);
+        if(height==0) return false;
+        this.message = assembleMessage(location);
+        calculateRange(height);
+        return true;
+    }
+
+    private static final Set<Material> REDSTONE_TORCH = ImmutableSet.of(Material.REDSTONE_TORCH_ON,Material.REDSTONE_TORCH_OFF);
+
+    /**
+     *
+     * @param location location of the base block
+     * @return the height of the tower or 0 if it's not valid
+     */
+    public static int verify(Location location){
+        if(location==null) return 0;
+
+        if(!location.getBlock().getType().equals(BASE_BLOCK)) // check if base is correct
+            return 0;
 
         boolean hasRedstoneTorch = false;
         boolean hasSign = false;
@@ -135,23 +158,35 @@ public class RadioTower{
                 if(Math.abs(x)!=Math.abs(z)){ // check for sign & torch
                     Location l = location.clone();
                     Block b = l.add(x,0,z).getBlock();
-                    if(b.getType().equals(Material.REDSTONE_TORCH_ON)||b.getType().equals(Material.REDSTONE_TORCH_OFF)){
+                    if(REDSTONE_TORCH.contains(b.getType())){
                         hasRedstoneTorch = true;
                     }else if(b.getType().equals(Material.WALL_SIGN)){
                         hasSign = true;
-                        org.bukkit.block.Sign s = (org.bukkit.block.Sign) b.getState();
-                        StringBuffer sb = new StringBuffer();
-                        for(String line : s.getLines()){ // read message
-                            sb.append(line);
-                        }
-                        this.message = sb.toString();
                     }
                 }
             }
         }
-        if(!hasSign || !hasRedstoneTorch) return false; // sign or torch missing
 
+        if(!hasSign || !hasRedstoneTorch) return 0; // sign or torch missing
+
+        int height = getHeight(location);
+
+        if(height<MIN_HEIGHT) return 0; // antenna not high enough
+
+        Location base = location.clone().add(0,height,0);
+        if(!hasSunlight(base)) return 0;
+
+        Bukkit.getLogger().info("Valid tower found, height: " + height +  "  message: " + assembleMessage(location));
+        return height;
+    }
+
+    public static boolean validate(Location location){
+        return verify(location)>0;
+    }
+
+    private static int getHeight(Location location){
         Location base = location.clone().add(0,1,0); // start of the antenna
+        final int WORLD_HEIGHT = location.getWorld().getMaxHeight();
         int height = 0;
         for(int i=0;i<MAX_HEIGHT && base.getY()<WORLD_HEIGHT;i++){
             if(base.getBlock().getType().equals(Material.IRON_FENCE)){
@@ -161,18 +196,34 @@ public class RadioTower{
             }
             base.add(0,1,0);
         }
-        if(height<MIN_HEIGHT) return false; // antenna not high enough
+        return height;
+    }
 
-
-        // force air above (sunlight)
-        while (base.getBlock().getType().equals(Material.AIR)){
-            base.add(0,1,0);
+    private static String assembleMessage(Location base){
+        StringBuffer sb = new StringBuffer();
+        for(int x=-1;x<=1;x++){
+            for(int z=-1;z<=1;z++){
+                if(Math.abs(x)!=Math.abs(z)){ // check for sign & torch
+                    Location l = base.clone();
+                    Block b = l.add(x,0,z).getBlock();
+                    if(b.getType().equals(Material.WALL_SIGN)){
+                        Sign s = (org.bukkit.block.Sign) b.getState();
+                        for(String line : s.getLines()){ // read message
+                            sb.append(line);
+                        }
+                    }
+                }
+            }
         }
+        return sb.toString();
+    }
 
-        if(base.getY()!=WORLD_HEIGHT) return false; // no sunlight
 
-        calculateRange(height);
-        return true;
+    private static boolean hasSunlight(Location location){
+        while (location.getBlock().getType().equals(Material.AIR)){
+            location.add(0, 1, 0);
+        }
+        return location.getY()==location.getWorld().getMaxHeight();
     }
 
     @Override
@@ -196,22 +247,6 @@ public class RadioTower{
     @Override
     public int hashCode() {
         return location.hashCode();
-    }
-
-    public static int getMaxPower() {
-        return MAX_POWER;
-    }
-
-    public static int getMAX_RANGE() {
-        return MAX_RANGE;
-    }
-
-    public int getFrequency() {
-        return frequency;
-    }
-
-    public double getAntennaGain() {
-        return antennaGain;
     }
 
     public Location getLocation() {
