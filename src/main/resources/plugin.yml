@@ -2,7 +2,7 @@ name: RadioTowers
 main: ch.k42.aftermath.ch.k42.radiotower.RadioTowerPlugin
 version: 0.5.2
 description: RadioTower Plugin, adds radio towers!
-authors: [AthmosPrime, redinzane, PotatoNorris]
+authors: [AthmosPrime, redinzane]
 
 depend:
 
