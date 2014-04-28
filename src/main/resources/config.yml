@@ -1,0 +1,11 @@
+cooldowns:
+  radiomessagecooldown: 5 # delay between two broadcasts from the same tower in seconds
+
+loreitems:
+  radio: &bRadio        # Use & for color codes, the name of the 'radio', type will be compass
+
+radiotower:
+  minimumHeight: 6      # minimum height of the antenna to be valid
+  maximumHeight: 40     # maximum height of the antenna, higher antennas won't help increase range/gain
+  maximumRange: 5000    # maximum range that can be achieved with this antenna if it's height is maximumHeight
+
