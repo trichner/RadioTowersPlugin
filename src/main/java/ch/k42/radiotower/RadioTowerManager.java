@@ -88,7 +88,7 @@ public class RadioTowerManager implements Listener, Runnable {
             if(tower.update()){ // tower still valid?
                 tower.broadcastMessage();
             }else {
-                towers.remove(tower);
+                towers.remove(tower.getLocation());
             }
         }
     }

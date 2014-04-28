@@ -173,10 +173,9 @@ public class RadioTower{
 
         if(height<MIN_HEIGHT) return 0; // antenna not high enough
 
-        Location base = location.clone().add(0,height,0);
+        Location base = location.clone().add(0,height+1,0);
         if(!hasSunlight(base)) return 0;
 
-        Bukkit.getLogger().info("Valid tower found, height: " + height +  "  message: " + assembleMessage(location));
         return height;
     }
 
