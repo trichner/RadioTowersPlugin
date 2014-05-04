@@ -8,6 +8,8 @@ Plugin that adds radio towers to minecraft.
 
 **License:** [GNU General Public License, version 3 (GPL-3.0)](http://opensource.org/licenses/gpl-3.0)
 
+**Build Server:** [Jenkins](https://k42.ch/jenkins/job/BedNerf/)
+
 Credit to redinzane for the configuration file handling.
 
 ### How to install:
