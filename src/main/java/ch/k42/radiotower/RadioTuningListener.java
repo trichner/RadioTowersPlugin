@@ -57,9 +57,7 @@ public class RadioTuningListener implements Listener{
 
     @EventHandler
     public void rightClick(PlayerInteractEvent event){
-        if(!(RIGHT_CLICK_ACTIONS.contains(event.getAction()))) return; // only rightclick
-
-        if(Minions.isNamedRadio(event.getItem(),LOREITEMRADIO)){ // yes, clicked in the air with radio
+        if(isRightClickRadio(event)){ // yes, clicked in the air with radio
             plugin.getLogger().finest("Radio interact event");
             Player player = event.getPlayer();
             if(!receivers.containsKey(player)) return;
@@ -87,5 +85,9 @@ public class RadioTuningListener implements Listener{
             }
             player.sendMessage("No signal found.");
         }
+    }
+
+    private boolean isRightClickRadio(PlayerInteractEvent event){
+        return RIGHT_CLICK_ACTIONS.contains(event.getAction()) && Minions.isNamedRadio(event.getItem(),LOREITEMRADIO);
     }
 }
