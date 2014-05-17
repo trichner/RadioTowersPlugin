@@ -43,31 +43,14 @@ public class RadioTowerConfig
 		else
 			return config.createSection(name);
 	}
-	
-	
 
-	
 	//Section with Radio settings
 	/**
 	 * Retrieve the cooldown in milliseconds.
 	 * @return Cooldown in milliseconds.
 	 */
-	public int getRadioCooldown() 
-	{
-		Object value = getSectionOrDefault(SECTION_COOLDOWNS).get(RADIOCOOLDOWN_KEY);
-		
-		if (value == null)
-			return DEFAULT_RADIOCOOLDOWN;
-		else
-			return ((Number) value).intValue();
-	}
-	/**
-	 * Set the cooldown in milliseconds.
-	 * @param value - new cooldown.
-	 */
-	public void setRadioCooldown(int value) 
-	{
-		getSectionOrDefault(SECTION_COOLDOWNS).set(RADIOCOOLDOWN_KEY, value);
+	public int getRadioCooldown(){
+		return getSectionOrDefault(SECTION_COOLDOWNS).getInt(RADIOCOOLDOWN_KEY);
 	}
 
     //Lore settings
@@ -75,46 +58,32 @@ public class RadioTowerConfig
      * Retrieve the lore item name.
      * @return Distance in milliseconds.
      */
-    public String getLoreItemRadio()
-    {
-        String value = getSectionOrDefault(SECTION_LOREITEMS).getString(LOREITEMRADIO_KEY);
-
-        if (value == null)
-            return DEFAULT_LOREITEMRADIO;
-        else
-            return (value);
-    }
-    /**
-     * Set the lore item name.
-     * @param value - new distance.
-     */
-    public void setLoreItemRadio(String value)
-    {
-        getSectionOrDefault(SECTION_LOREITEMS).set(LOREITEMRADIO_KEY, value);
+    public String getLoreItemRadio(){
+        return getSectionOrDefault(SECTION_LOREITEMS).getString(LOREITEMRADIO_KEY);
     }
 	//==== Radio Tower Settings
     public int getRTMinHeight(){
         int value = getSectionOrDefault(SECTION_RADIOTOWER).getInt(RT_MINHEIGHT_KEY);
 
-        if (value < 0)
-            return DEFAULT_RT_MIN_HEIGHT;
-        else
-            return (value);
+        if (value < 0){
+            value = DEFAULT_RT_MIN_HEIGHT;
+        }
+        return value;
     }
     public int getRTMaxHeight(){
         int value = getSectionOrDefault(SECTION_RADIOTOWER).getInt(RT_MAXHEIGHT_KEY);
 
-        if (value < 0)
-            return DEFAULT_RT_MAX_HEIGHT;
-        else
-            return (value);
+        if (value < 0){
+            value = DEFAULT_RT_MAX_HEIGHT;
+        }
+        return value;
     }
     public int getRTMaxRange(){
         int value = getSectionOrDefault(SECTION_RADIOTOWER).getInt(RT_MAXRANGE_KEY);
 
-        if (value < 0)
-            return DEFAULT_RT_MAX_RANGE;
-        else
-            return (value);
+        if (value < 0) {
+            value = DEFAULT_RT_MAX_RANGE;
+        }
+        return value;
     }
 }

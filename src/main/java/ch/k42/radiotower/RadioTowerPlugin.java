@@ -1,13 +1,23 @@
 package ch.k42.radiotower;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
-import org.bukkit.*;
+import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
+import org.bukkit.Location;
+import org.bukkit.Sound;
+import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -27,19 +37,13 @@ public class RadioTowerPlugin extends JavaPlugin
 		@Override
 	    public void onEnable()
 		{
-			//Creates a Config
-			config = new RadioTowerConfig(getConfig());
-            if (!hasConfig()) 
-            {
-				getConfig().options().copyDefaults(true);
-				saveConfig();
-				
-				// Load it again
-				config = new RadioTowerConfig(getConfig());
-				getLogger().info("Creating default configuration.");
-			}
 
-
+            if (!hasConfig()) {
+                saveDefaultConfig();
+                getLogger().info("Creating default configuration.");
+            }
+            // Load it again
+            config = new RadioTowerConfig(getConfig());
 
             radioListener = new RadioTuningListener(ChatColor.translateAlternateColorCodes('&', config.getLoreItemRadio()),this);
             RadioTower.setParameters(config.getRTMinHeight(),config.getRTMaxHeight(),config.getRTMaxRange());

@@ -2,7 +2,7 @@ cooldowns:
   radiomessagecooldown: 5 # delay between two broadcasts from the same tower in seconds
 
 loreitems:
-  radio: &bRadio        # Use & for color codes, the name of the 'radio', type will be compass
+  radio: '&bRadio'        # Use & for color codes, the name of the 'radio', type will be compass
 
 radiotower:
   minimumHeight: 6      # minimum height of the antenna to be valid

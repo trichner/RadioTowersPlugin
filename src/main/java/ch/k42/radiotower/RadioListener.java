@@ -22,6 +22,15 @@ public final class RadioListener implements Listener{
     @EventHandler(priority = EventPriority.LOW)
     public void receiveMessage(RadioMessageEvent event){
         if(hasRadioInHand(player)){
+
+            // maybe towers changed
+            if(plugin.getRadioTowerManager().getTowers().size()>=radioNr){
+                if(plugin.getRadioTowerManager().getTowers().size()>0){
+                    radioNr = 0;
+                }
+            }
+
+
             if(!event.getTower().equals(plugin.getRadioTowerManager().getTowers().get(radioNr))) return; // are we tuned to the right radio?
             String msg = event.getMessageAt(player.getLocation());
             if(msg!=null){
