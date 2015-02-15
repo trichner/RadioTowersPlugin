@@ -25,11 +25,12 @@ public class RadioMessageEvent extends Event {
      * @return the broadcasted message or null if none reveived
      */
     public String getMessageAt(Location location) {
-
+        // is player in range?
         double reception = tower.getNormReceptionPower(location);
         double receptionAbs = tower.getReceptionPower(location);
         if(reception<=0) return null;
 
+        // assemble the chat message
         String freq = tower.getFrequencyString();
         String power = Minions.powerToString(receptionAbs);
 

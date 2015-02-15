@@ -11,7 +11,9 @@ public final class RadioListener implements Listener{
     private String LOREITEMRADIO;
     private Player player;
     private RadioTowerPlugin plugin;
-    private int radioNr =0;
+
+    // TODO Reference should not be number but tower!
+    private RadioTower myTower = null;
 
     public RadioListener(String LOREITEMRADIO, Player player, RadioTowerPlugin plugin) {
         this.LOREITEMRADIO = LOREITEMRADIO;
@@ -23,20 +25,18 @@ public final class RadioListener implements Listener{
     public void receiveMessage(RadioMessageEvent event){
         if(hasRadioInHand(player)){
 
+            CircularList<RadioTower> towers = plugin.getRadioTowerManager().getTowers();
             // maybe towers changed
-            if(plugin.getRadioTowerManager().getTowers().size()>=radioNr){
-                if(plugin.getRadioTowerManager().getTowers().size()>0){
-                    radioNr = 0;
-                }
+            if(myTower==null || (!towers.contains(myTower))){
+                myTower = towers.head().value();
             }
 
+            if(event.getTower()!=myTower) return; // are we tuned to the right radio?
 
-            if(!event.getTower().equals(plugin.getRadioTowerManager().getTowers().get(radioNr))) return; // are we tuned to the right radio?
             String msg = event.getMessageAt(player.getLocation());
             if(msg!=null){
                 player.sendMessage(msg); // display message, obfuscate if needed
             }
-
         }else {
             RadioMessageEvent.getHandlerList().unregister(this); // we no longer have a radio in hand, no need to listen further
         }
@@ -45,14 +45,10 @@ public final class RadioListener implements Listener{
     private boolean hasRadioInHand(Player player){
         ItemStack item = player.getItemInHand();
         return Minions.isNamedRadio(item,LOREITEMRADIO);
-
     }
 
-    public int getRadioNr() {
-        return radioNr;
-    }
-
-    public void setRadioNr(int radioNr) {
-        this.radioNr = radioNr;
+    public RadioTower tuneNext() {
+        myTower = plugin.getRadioTowerManager().getTowers().next(myTower);
+        return myTower;
     }
 }

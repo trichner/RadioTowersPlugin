@@ -1,10 +1,6 @@
 package ch.k42.radiotower;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-
+import com.google.common.collect.ImmutableSet;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -14,7 +10,9 @@ import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerItemHeldEvent;
 import org.bukkit.inventory.ItemStack;
 
-import com.google.common.collect.ImmutableSet;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 //import sun.net.www.content.text.plain;
 
@@ -45,11 +43,9 @@ public class RadioTuningListener implements Listener{
             receivers.put(player,l);
             Bukkit.getPluginManager().registerEvents(l, plugin);
             return;
-        }else{
-            if(receivers.containsKey(player)){
-                plugin.getLogger().info("Removing listener");
-                RadioMessageEvent.getHandlerList().unregister(receivers.remove(player));
-            }
+        }else if(receivers.containsKey(player)){
+            plugin.getLogger().info("Removing listener");
+            RadioMessageEvent.getHandlerList().unregister(receivers.remove(player));
         }
     }
 
@@ -57,29 +53,21 @@ public class RadioTuningListener implements Listener{
 
     @EventHandler
     public void rightClick(PlayerInteractEvent event){
-        if(isRightClickRadio(event)){ // yes, clicked in the air with radio
+        if(isRightClickRadio(event)){ // yes, clicked with radio
             plugin.getLogger().finest("Radio interact event");
             Player player = event.getPlayer();
             if(!receivers.containsKey(player)) return;
             RadioListener receiver = receivers.get(player);
 
-            int index = receiver.getRadioNr()+1; // increment index
-            List<RadioTower> towers = plugin.getRadioTowerManager().getTowers();
-            int size = towers.size();
-            if(size==0){
-                player.sendMessage("No signal found.");
-                return; // no towers
-            }
-            if(index>=size) index =0; // index out of bounds?
+            CircularList<RadioTower> towers = plugin.getRadioTowerManager().getTowers();
 
             RadioTower tower;
-
+            int size = towers.size();
             for(int i =0;i<size;i++){
-                tower = towers.get((index+i)%size);
+                tower = receiver.tuneNext();
                 if(0<tower.getReceptionPower(player.getLocation())){
                     player.sendMessage("Found signal on " + tower.getFrequencyString() +", tuning radio");
                     player.setCompassTarget(tower.getLocation());
-                    receiver.setRadioNr((index+i)%size);
                     return;
                 }
             }
