@@ -1,7 +1,6 @@
 package ch.k42.radiotower;
 
-import java.util.Set;
-
+import com.google.common.collect.ImmutableSet;
 import org.bukkit.Bukkit;
 import org.bukkit.Effect;
 import org.bukkit.Location;
@@ -9,14 +8,10 @@ import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.Sign;
 
-import com.google.common.collect.ImmutableSet;
+import java.util.Set;
 
 /**
- * Created with IntelliJ IDEA.
- * User: Thomas
- * Date: 15.09.13
- * Time: 16:51
- * To change this template use File | Settings | File Templates.
+ * Created by Thomas Richner
  */
 public class RadioTower{
 
@@ -186,8 +181,8 @@ public class RadioTower{
     private static int getHeight(Location location){
         Location base = location.clone().add(0,1,0); // start of the antenna
         final int WORLD_HEIGHT = location.getWorld().getMaxHeight();
-        int height = 0;
-        for(int i=0;i<MAX_HEIGHT && base.getY()<WORLD_HEIGHT;i++){
+        int height=0;
+        while(base.getY()<WORLD_HEIGHT){
             if(base.getBlock().getType().equals(Material.IRON_FENCE)){
                 height++;
             }else {
@@ -200,9 +195,10 @@ public class RadioTower{
 
     private static String assembleMessage(Location base){
         StringBuffer sb = new StringBuffer();
+        // check for sign & torch
         for(int x=-1;x<=1;x++){
             for(int z=-1;z<=1;z++){
-                if(Math.abs(x)!=Math.abs(z)){ // check for sign & torch
+                if(Math.abs(x)!=Math.abs(z)){
                     Location l = base.clone();
                     Block b = l.add(x,0,z).getBlock();
                     if(b.getType().equals(Material.WALL_SIGN)){
