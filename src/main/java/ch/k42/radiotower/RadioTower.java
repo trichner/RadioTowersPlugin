@@ -215,10 +215,7 @@ public class RadioTower{
 
 
     private static boolean hasSunlight(Location location){
-        while (location.getBlock().getType().equals(Material.AIR)){
-            location.add(0, 1, 0);
-        }
-        return location.getY()==location.getWorld().getMaxHeight();
+        return location.getY()>=location.getWorld().getHighestBlockYAt(location);
     }
 
     @Override
