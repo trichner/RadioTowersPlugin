@@ -79,7 +79,7 @@ public class CircularList<T>{
         if(head==null){
             return null;
         }
-        return find(element);
+        return head.find(element);
     }
 
     public static class Node<T>{
