@@ -50,6 +50,10 @@ public class CircularList<T>{
     }
 
     public T next(T element){
+        Node<T> node = find(element);
+        if(node==null){
+            //NODE NOT FOUND!!! FIXME
+        }
         return next(find(element)).value();
     }
 
