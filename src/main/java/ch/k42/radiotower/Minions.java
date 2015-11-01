@@ -1,5 +1,11 @@
 package ch.k42.radiotower;
-
+/**
+ * Event for sending one Message from one Tower
+ *
+ * @author Thomas Richner
+ * @created 07.02.14.
+ * @license MIT
+ */
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
@@ -10,9 +16,6 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Random;
 
-/**
- * Created by Thomas on 07.02.14.
- */
 public class Minions {
     private static final char obfuscate0 = ChatColor.WHITE.getChar();
     private static final char obfuscate1 = ChatColor.GRAY.getChar();

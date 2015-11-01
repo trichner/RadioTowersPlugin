@@ -1,19 +1,30 @@
 package ch.k42.radiotower;
-
+/**
+ * Event for sending one Message from one Tower
+ *
+ * @author Thomas Richner
+ * @created 07.02.14.
+ * @license MIT
+ */
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.inventory.ItemStack;
 
-public final class RadioListener implements Listener{
+import java.util.Map.Entry;
+import java.util.NavigableMap;
+import java.util.SortedMap;
+import java.util.concurrent.ConcurrentSkipListMap;
+import java.util.stream.Collector;
+
+public final class RadioListener implements Listener {
 
     private String LOREITEMRADIO;
     private Player player;
     private RadioTowerPlugin plugin;
 
-    // TODO Reference should not be number but tower!
-    private RadioTower myTower = null;
+    private int mFrequency = 0;
 
     public RadioListener(String LOREITEMRADIO, Player player, RadioTowerPlugin plugin) {
         this.LOREITEMRADIO = LOREITEMRADIO;
@@ -21,34 +32,69 @@ public final class RadioListener implements Listener{
         this.plugin = plugin;
     }
 
+    private boolean broadcastMessage(RadioTower tower) {
+        if (tower == null) return false;
+        String msg = tower.getMessageAt(player.getLocation());
+        if (msg == null) return false;
+        player.sendMessage(msg); // display message, obfuscate if needed
+        return true;
+    }
+
     @EventHandler(priority = EventPriority.LOW)
-    public void receiveMessage(RadioMessageEvent event){
-        if(hasRadioInHand(player)){
-
-            CircularList<RadioTower> towers = plugin.getRadioTowerManager().getTowers();
+    public void receiveMessage(RadioMessageEvent event) {
+        if (hasRadioInHand(player)) {
+            SortedMap<Integer, RadioTower> towers = plugin.getRadioTowerManager().getTowers();
             // maybe towers changed
-            if(myTower==null || (!towers.contains(myTower))){
-                myTower = towers.head().value();
-            }
-
-            if(event.getTower()!=myTower) return; // are we tuned to the right radio?
-
-            String msg = event.getMessageAt(player.getLocation());
-            if(msg!=null){
-                player.sendMessage(msg); // display message, obfuscate if needed
-            }
-        }else {
-            RadioMessageEvent.getHandlerList().unregister(this); // we no longer have a radio in hand, no need to listen further
+            RadioTower myTower = towers.get(mFrequency);
+            broadcastMessage(myTower);
+        } else {
+            RadioMessageEvent.getHandlerList()
+                    .unregister(this); // we no longer have a radio in hand, no need to listen further
         }
     }
 
-    private boolean hasRadioInHand(Player player){
+    private boolean hasRadioInHand(Player player) {
         ItemStack item = player.getItemInHand();
-        return Minions.isNamedRadio(item,LOREITEMRADIO);
+        return Minions.isNamedRadio(item, LOREITEMRADIO);
     }
 
-    public RadioTower tuneNext() {
-        myTower = plugin.getRadioTowerManager().getTowers().next(myTower);
-        return myTower;
+    public void tuneNext() {
+        NavigableMap<Integer, RadioTower> towers = plugin.getRadioTowerManager().getTowers();
+
+
+        Collector<RadioTower, NavigableMap<Integer, RadioTower>, NavigableMap<Integer, RadioTower>>
+                nmCollector = Collector.of(
+                ConcurrentSkipListMap<Integer, RadioTower>::new, (a, t) -> a.put(t.getFrequency(), t),
+                (l, r) -> {
+                    l.putAll(r);
+                    return l;
+                });
+
+        NavigableMap<Integer, RadioTower> available =
+                towers.values().stream().filter(t -> 0 < t.getReceptionPower(player.getLocation()))
+                        .collect(nmCollector);
+
+        Integer newFreq = null;
+        if (available.size() > 0) {
+            newFreq = towers.lowerKey(mFrequency);
+            if (newFreq == null) {
+                Entry<Integer, RadioTower> e = towers.firstEntry();
+                if (e == null) {
+                    newFreq = null;
+                } else {
+                    newFreq = e.getKey();
+                }
+            }
+
+        }
+
+        if (newFreq == null) {
+            player.sendMessage("No signal found.");
+        } else {
+            mFrequency = newFreq.intValue();
+            RadioTower tower = towers.get(mFrequency);
+            player.sendMessage("Found signal on " + tower.getFrequencyString() + ", tuning radio");
+            player.setCompassTarget(tower.getLocation());
+        }
     }
 }

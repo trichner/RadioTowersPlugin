@@ -2,7 +2,7 @@ name: RadioTowers
 main: ch.k42.radiotower.RadioTowerPlugin
 version: ${project.version}
 description: RadioTower Plugin, adds radio towers!
-authors: [AthmosPrime, redinzane]
+authors: [AthmosPrime,trichner]
 
 depend:
 
