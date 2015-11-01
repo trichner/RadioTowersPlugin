@@ -6,6 +6,7 @@ package ch.k42.radiotower;
  * @created 07.02.14.
  * @license MIT
  */
+
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -14,7 +15,6 @@ import org.bukkit.inventory.ItemStack;
 
 import java.util.Map.Entry;
 import java.util.NavigableMap;
-import java.util.SortedMap;
 import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.stream.Collector;
 
@@ -33,7 +33,7 @@ public final class RadioListener implements Listener {
     }
 
     private boolean broadcastMessage(RadioTower tower) {
-        if (tower == null) return false;
+        if (tower == null || mFrequency != tower.getFrequency()) return false;
         String msg = tower.getMessageAt(player.getLocation());
         if (msg == null) return false;
         player.sendMessage(msg); // display message, obfuscate if needed
@@ -43,10 +43,7 @@ public final class RadioListener implements Listener {
     @EventHandler(priority = EventPriority.LOW)
     public void receiveMessage(RadioMessageEvent event) {
         if (hasRadioInHand(player)) {
-            SortedMap<Integer, RadioTower> towers = plugin.getRadioTowerManager().getTowers();
-            // maybe towers changed
-            RadioTower myTower = towers.get(mFrequency);
-            broadcastMessage(myTower);
+            broadcastMessage(event.getTower());
         } else {
             RadioMessageEvent.getHandlerList()
                     .unregister(this); // we no longer have a radio in hand, no need to listen further
@@ -60,7 +57,6 @@ public final class RadioListener implements Listener {
 
     public void tuneNext() {
         NavigableMap<Integer, RadioTower> towers = plugin.getRadioTowerManager().getTowers();
-
 
         Collector<RadioTower, NavigableMap<Integer, RadioTower>, NavigableMap<Integer, RadioTower>>
                 nmCollector = Collector.of(
@@ -76,7 +72,7 @@ public final class RadioListener implements Listener {
 
         Integer newFreq = null;
         if (available.size() > 0) {
-            newFreq = towers.lowerKey(mFrequency);
+            newFreq = towers.higherKey(mFrequency);
             if (newFreq == null) {
                 Entry<Integer, RadioTower> e = towers.firstEntry();
                 if (e == null) {
@@ -85,7 +81,6 @@ public final class RadioListener implements Listener {
                     newFreq = e.getKey();
                 }
             }
-
         }
 
         if (newFreq == null) {

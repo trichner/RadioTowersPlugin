@@ -6,6 +6,7 @@ package ch.k42.radiotower;
  * @created 07.02.14.
  * @license MIT
  */
+
 import com.google.common.collect.ImmutableSet;
 import org.bukkit.Bukkit;
 import org.bukkit.Effect;
@@ -14,6 +15,7 @@ import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.Sign;
 
+import java.nio.ByteBuffer;
 import java.util.Set;
 
 public class RadioTower {
@@ -61,14 +63,14 @@ public class RadioTower {
         }
     }
 
-    private static final int M32 = 0xFFFFFFE0; // Masks away the lowest bits, equivalent to /32
-
     private void updateFrequency() {
-        int hash = ((location.getBlockX() & M32) * 31 + (location.getBlockY() & M32)) * 53 +
-                (location.getBlockZ() & M32);
-        hash = Minions.cryptoHashToInt(hash);
-        this.frequency = MIN_FREQ + (hash % N_FREQ) * D_FREQ;
-        this.frequencyString = Minions.frequencyToString(frequency);
+        ByteBuffer buf = ByteBuffer.allocate(3 * 4);
+        buf.putInt(location.getBlockX());
+        buf.putInt(location.getBlockY());
+        buf.putInt(location.getBlockZ());
+        frequency = Minions.cryptoHashToInt(buf.array());
+        int readableFrequency = MIN_FREQ + (frequency % N_FREQ) * D_FREQ;
+        this.frequencyString = Minions.frequencyToString(readableFrequency);
     }
 
 
@@ -136,7 +138,7 @@ public class RadioTower {
     public boolean update() {
         int height = verify(location);
         if (height == 0) return false;
-        this.message = assembleMessage(location);
+        this.message = assembleMessage();
         calculateRange(height);
         return true;
     }
@@ -201,13 +203,13 @@ public class RadioTower {
         return height;
     }
 
-    private static String assembleMessage(Location base) {
+    private String assembleMessage() {
         StringBuffer sb = new StringBuffer();
         // check for sign & torch
         for (int x = -1; x <= 1; x++) {
             for (int z = -1; z <= 1; z++) {
                 if (Math.abs(x) != Math.abs(z)) {
-                    Location l = base.clone();
+                    Location l = location.clone();
                     Block b = l.add(x, 0, z).getBlock();
                     if (b.getType().equals(Material.WALL_SIGN)) {
                         Sign s = (org.bukkit.block.Sign) b.getState();

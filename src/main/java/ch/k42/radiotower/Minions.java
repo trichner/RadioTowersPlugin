@@ -6,6 +6,7 @@ package ch.k42.radiotower;
  * @created 07.02.14.
  * @license MIT
  */
+
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
@@ -83,9 +84,13 @@ public class Minions {
     public static final byte[] MAGIC_SALT = {(byte) 0xDE, (byte) 0xAD, (byte) 0xBE, (byte) 0xEF};
 
     public static final int cryptoHashToInt(int value) {
+        return cryptoHashToInt(ByteBuffer.allocate(4).putInt(value).array());
+    }
+
+    public static final int cryptoHashToInt(byte[] bytes) {
         try {
             MessageDigest digest = MessageDigest.getInstance("SHA-256");
-            digest.update(ByteBuffer.allocate(4).putInt(value).array());
+            digest.update(bytes);
             digest.update(MAGIC_SALT);
             ByteBuffer buf = ByteBuffer.wrap(digest.digest());
             return Math.abs(buf.getInt());

@@ -6,6 +6,7 @@ package ch.k42.radiotower;
  * @created 07.02.14.
  * @license MIT
  */
+
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
